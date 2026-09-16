@@ -6,3 +6,5 @@ venv/
 .DS_Store
 Thumbs.db
 .ipynb_checkpoints/
+data/raw/*
+!data/raw/.gitkeep
