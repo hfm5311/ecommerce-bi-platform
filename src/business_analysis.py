@@ -1,3 +1,16 @@
+# -----------------------------
+# Business Insights
+# -----------------------------
+
+# 1. November 2017 had the highest monthly revenue,
+#    reaching approximately 1.01 million.
+#    Revenue also remained relatively high from January to May 2018.
+
+# 2. The average order value (AOV) was approximately 137.75.
+
+# 3. SP generated the highest total revenue among all customer states,
+#    with approximately 5.20 million in revenue.
+
 import pandas as pd
 
 
@@ -65,3 +78,70 @@ print(
         ascending=False
     )
 )
+
+# -----------------------------
+# Order Items & Revenue Analysis
+# -----------------------------
+
+order_items= pd.read_csv("data/raw/olist_order_items_dataset.csv")
+print(order_items.columns)
+
+# Calculate total product revenue for each order
+order_revenue=(
+    order_items.groupby("order_id").agg(
+        order_revenue=("price","sum")
+    ).reset_index()
+)
+# Sort orders by revenue from highest to lowest
+print(
+    order_revenue.sort_values("order_revenue", ascending=False)
+)
+
+# Merge order revenue with order information
+orders_revenue = pd.merge(
+    orders,
+    order_revenue,
+    on="order_id",
+    how="inner"
+)
+print(orders_revenue.head(5))
+
+# Calculate total revenue by month
+orders_revenue["order_purchase_timestamp"]=pd.to_datetime(
+    orders_revenue["order_purchase_timestamp"]
+)
+orders_revenue["order_month"] = (
+    orders_revenue["order_purchase_timestamp"].dt.to_period("M")
+)
+# Calculate total revenue by month
+monthly_revenue = (
+    orders_revenue.groupby("order_month").agg(
+        monthly_revenue=("order_revenue", "sum")
+    ).reset_index()
+)
+print(monthly_revenue)
+
+# Identify the top 5 months by total revenue
+top5_revenue = monthly_revenue.sort_values("monthly_revenue", ascending=False)
+print(top5_revenue.head(5))
+
+# Calculate average revenue per order (AOV)
+avg_order_value=order_revenue["order_revenue"].mean()
+print(avg_order_value)
+
+# Merge revenue data with customer location information
+customers=pd.read_csv("data/raw/olist_customers_dataset.csv")
+customer_revenue = pd.merge(
+    orders_revenue,
+    customers,
+    on="customer_id",
+    how="inner"
+)
+print(customer_revenue.head(5))
+
+# Calculate total revenue by customer state
+state_revenue =customer_revenue.groupby("customer_state").agg(
+    state_revenue = ("order_revenue", "sum")
+).reset_index()
+print(state_revenue.sort_values("state_revenue",ascending=False).head(10))
+
